@@ -903,8 +903,8 @@ Manchmal entspricht +pass+ nicht den Anforderungen, wenn das Ergebnis einer
 anderen Route gefordert wird. Um das zu erreichen, lässt sich +call+ nutzen:
 
   get '/foo' do
-    status, headers, body = call request.env.merge("PATH_INFO" => '/bar')
-    [status, body.upcase]
+    status, headers, body = call env.merge("PATH_INFO" => '/bar')
+    [status, headers, body.map(&:upcase)]
   end
 
   get '/bar' do
@@ -1357,7 +1357,7 @@ Routen-Block oder in einem Filter geworfen wurde. Die Exception kann über die
 Benutzerdefinierte Fehler:
 
   error MeinFehler do
-    'Au weia, ' + request.env['sinatra.error'].message
+    'Au weia, ' + env['sinatra.error'].message
   end
 
 Dann, wenn das passiert:
@@ -1819,10 +1819,10 @@ die so installiert werden:
 === Mit Bundler
 
 Wenn die Applikation mit der neuesten Version von Sinatra und
-{Bundler}[http://gembundler.com/] genutzt werden soll, schlagen wir folgenden
-Weg vor:
+{Bundler}[http://gembundler.com/] genutzt werden soll, empfehlen wir den
+nachfolgenden Weg.
 
-Soweit Bundler noch nicht installiert ist, folgendes:
+Soweit Bundler noch nicht installiert ist:
 
   gem install bundler
 
@@ -1897,9 +1897,13 @@ SemVer und SemVerTag.
 * {Projekt-Website}[http://sinatra.github.com/] - Ergänzende Dokumentation,
   News und Links zu anderen Ressourcen.
 * {Hilfe beisteuern}[http://sinatra.github.com/contributing.html] - Einen
-Fehler gefunden? Brauchst du Hilfe? Hast du einen Patch?
+  Fehler gefunden? Brauchst du Hilfe? Hast du einen Patch?
 * {Issue-Tracker}[http://github.com/sinatra/sinatra/issues]
 * {Twitter}[http://twitter.com/sinatra]
 * {Mailing-Liste}[http://groups.google.com/group/sinatrarb]
 * {IRC: #sinatra}[irc://chat.freenode.net/#sinatra] auf http://freenode.net
+
+* API Dokumentation für die {aktuelle Version}[http://rubydoc.info/gems/sinatra]	
+  oder für {HEAD}[http://rubydoc.info/github/sinatra/sinatra] auf 
+  http://rubydoc.info
 
