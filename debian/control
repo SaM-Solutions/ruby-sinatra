@@ -2,10 +2,11 @@ Source: ruby-sinatra
 Section: ruby
 Priority: optional
 Maintainer: Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>
-Uploaders: Lucas Nussbaum <lucas@lucas-nussbaum.net>
+Uploaders: Lucas Nussbaum <lucas@lucas-nussbaum.net>, Youhei SASAKI <uwabami@gfd-dennou.org>
 DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7.0.50~), gem2deb (>= 0.2.1), ruby-tilt
-Standards-Version: 3.9.1
+#Build-Depends: debhelper (>= 7.0.50~), gem2deb (>= 0.2.1), ruby-tilt, ruby-rack-test
+Standards-Version: 3.9.2
 Vcs-Git: git://git.debian.org/pkg-ruby-extras/ruby-sinatra.git
 Vcs-Browser: http://git.debian.org/?p=pkg-ruby-extras/ruby-sinatra.git;a=summary
 Homepage: http://www.sinatrarb.com/
