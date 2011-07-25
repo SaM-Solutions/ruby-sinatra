@@ -7,15 +7,11 @@ require 'sinatra/showexceptions'
 require 'tilt'
 
 module Sinatra
-  VERSION = '1.2.3'
+  VERSION = '1.2.6'
 
   # The request object. See Rack::Request for more info:
   # http://rack.rubyforge.org/doc/classes/Rack/Request.html
   class Request < Rack::Request
-    def self.new(env)
-      env['sinatra.request'] ||= super
-    end
-
     # Returns an array of acceptable media types for the response
     def accept
       @env['sinatra.accept'] ||= begin
@@ -63,7 +59,7 @@ module Sinatra
     def accept_entry(entry)
       type, *options = entry.gsub(/\s/, '').split(';')
       quality = 0 # we sort smalles first
-      options.delete_if { |e| quality = 1 - e[2..-1].to_f if e.start_with? 'q=' }
+      options.delete_if { |e| quality = 1 - e[2..-1].to_f if e =~ /^q=/ }
       [type, [quality, type.count('*'), 1 - options.size]]
     end
   end
@@ -371,7 +367,7 @@ module Sinatra
       time = time_for time
       response['Last-Modified'] = time.httpdate
       # compare based on seconds since epoch
-      halt 304 if Time.httpdate(request.env['HTTP_IF_MODIFIED_SINCE']).to_i >= time.to_i
+      halt 304 if Time.httpdate(env['HTTP_IF_MODIFIED_SINCE']).to_i >= time.to_i
     rescue ArgumentError
     end
 
@@ -655,17 +651,7 @@ module Sinatra
         end
       end
 
-      status, header, body = @response.finish
-
-      # Never produce a body on HEAD requests. Do retain the Content-Length
-      # unless it's "0", in which case we assume it was calculated erroneously
-      # for a manual HEAD response and remove it entirely.
-      if @env['REQUEST_METHOD'] == 'HEAD'
-        body = []
-        header.delete('Content-Length') if header['Content-Length'] == '0'
-      end
-
-      [status, header, body]
+      @response.finish
     end
 
     # Access settings defined with Base.set.
@@ -700,7 +686,7 @@ module Sinatra
     # Forward the request to the downstream app -- middleware only.
     def forward
       fail "downstream app not set" unless @app.respond_to? :call
-      status, headers, body = @app.call(@request.env)
+      status, headers, body = @app.call env
       @response.status = status
       @response.body = body
       @response.headers.merge! headers
@@ -953,14 +939,15 @@ module Sinatra
 
       # Sets an option to the given value.  If the value is a proc,
       # the proc will be called every time the option is accessed.
-      def set(option, value=self, &block)
-        raise ArgumentError if block && value != self
+      def set(option, value = (not_set = true), &block)
+        raise ArgumentError if block and !not_set
         value = block if block
         if value.kind_of?(Proc)
           metadef(option, &value)
           metadef("#{option}?") { !!__send__(option) }
           metadef("#{option}=") { |val| metadef(option, &Proc.new{val}) }
-        elsif value == self && option.respond_to?(:each)
+        elsif not_set
+          raise ArgumentError unless option.respond_to?(:each)
           option.each { |k,v| set(k, v) }
         elsif respond_to?("#{option}=")
           __send__ "#{option}=", value
@@ -1274,6 +1261,7 @@ module Sinatra
         builder.use Rack::MethodOverride if method_override?
         builder.use ShowExceptions       if show_exceptions?
         builder.use Rack::CommonLogger   if logging?
+        builder.use Rack::Head
         setup_sessions builder
         middleware.each { |c,a,b| builder.use(c, *a, &b) }
         builder.run new!(*args, &bk)
@@ -1440,7 +1428,7 @@ module Sinatra
           </style>
         </head>
         <body>
-          <h2>Sinatra doesn't know this ditty.</h2>
+          <h2>Sinatra doesn&rsquo;t know this ditty.</h2>
           <img src='#{uri "/__sinatra__/404.png"}'>
           <div id="c">
             Try this:
@@ -1464,6 +1452,7 @@ module Sinatra
     set :logging, Proc.new { ! test? }
     set :method_override, true
     set :run, Proc.new { ! test? }
+    set :session_secret, Proc.new { super() unless development? }
 
     def self.register(*extensions, &block) #:nodoc:
       added_methods = extensions.map {|m| m.public_instance_methods }.flatten
@@ -1476,14 +1465,28 @@ module Sinatra
   # methods to be delegated to the Sinatra::Application class. Used primarily
   # at the top-level.
   module Delegator #:nodoc:
+    TEMPLATE = <<-RUBY
+      def %1$s(*args, &b)
+        return super if respond_to? :%1$s
+        ::Sinatra::Delegator.target.send("%2$s", *args, &b)
+      end
+    RUBY
+
     def self.delegate(*methods)
       methods.each do |method_name|
-        eval <<-RUBY, binding, '(__DELEGATE__)', 1
-          def #{method_name}(*args, &b)
-            ::Sinatra::Application.send(#{method_name.inspect}, *args, &b)
-          end
-          private #{method_name.inspect}
-        RUBY
+        # Replaced with way shorter and better implementation in 1.3.0
+        # using define_method instead, however, blocks cannot take block
+        # arguments on 1.8.6.
+        begin
+          code = TEMPLATE % [method_name, method_name]
+          eval code, binding, '(__DELEGATE__)', 1
+        rescue SyntaxError
+          code  = TEMPLATE % [:_delegate, method_name]
+          eval code, binding, '(__DELEGATE__)', 1
+          alias_method method_name, :_delegate
+          undef_method :_delegate
+        end
+        private method_name
       end
     end
 
@@ -1491,6 +1494,12 @@ module Sinatra
              :before, :after, :error, :not_found, :configure, :set, :mime_type,
              :enable, :disable, :use, :development?, :test?, :production?,
              :helpers, :settings
+
+    class << self
+      attr_accessor :target
+    end
+
+    self.target = Application
   end
 
   # Create a new Sinatra application. The block is evaluated in the new app's
@@ -1503,11 +1512,11 @@ module Sinatra
 
   # Extend the top-level DSL with the modules provided.
   def self.register(*extensions, &block)
-    Application.register(*extensions, &block)
+    Delegator.target.register(*extensions, &block)
   end
 
   # Include the helper modules provided in Sinatra's request context.
   def self.helpers(*extensions, &block)
-    Application.helpers(*extensions, &block)
+    Delegator.target.helpers(*extensions, &block)
   end
 end
