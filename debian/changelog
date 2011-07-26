@@ -2,8 +2,7 @@ ruby-sinatra (1.2.6-1) unstable; urgency=low
 
   * New upstream version: 1.2.6
   * Add me to Uploaders
-  * Add some pacakges to Build-Depends for test:
-    - 
+  * Add lintian-overrides
 
  -- Youhei SASAKI <uwabami@gfd-dennou.org>  Tue, 26 Jul 2011 01:23:37 +0900
 
