@@ -1,10 +1,10 @@
-require File.dirname(__FILE__) + '/helper'
+require File.expand_path('../helper', __FILE__)
 
 class StaticTest < Test::Unit::TestCase
   setup do
     mock_app {
       set :static, true
-      set :public, File.dirname(__FILE__)
+      set :public_folder, File.dirname(__FILE__)
     }
   end
 
@@ -36,7 +36,6 @@ class StaticTest < Test::Unit::TestCase
     head "/#{File.basename(__FILE__)}"
     assert ok?
     assert_equal '', body
-    assert_equal File.size(__FILE__).to_s, response['Content-Length']
     assert response.headers.include?('Last-Modified')
   end
 
@@ -66,7 +65,7 @@ class StaticTest < Test::Unit::TestCase
   end
 
   it 'passes to the next handler when the public option is nil' do
-    @app.set :public, nil
+    @app.set :public_folder, nil
     get "/#{File.basename(__FILE__)}"
     assert not_found?
   end
@@ -85,7 +84,7 @@ class StaticTest < Test::Unit::TestCase
   it '404s when .. path traverses outside of public directory' do
     mock_app {
       set :static, true
-      set :public, File.dirname(__FILE__) + '/data'
+      set :public_folder, File.dirname(__FILE__) + '/data'
     }
     get "/../#{File.basename(__FILE__)}"
     assert not_found?
@@ -154,4 +153,25 @@ class StaticTest < Test::Unit::TestCase
       assert_equal "bytes */#{length}",response['Content-Range'], "416 response should include actual length"
     end
   end
+
+  it 'does not include static cache control headers by default' do
+    env = Rack::MockRequest.env_for("/#{File.basename(__FILE__)}")
+    status, headers, body = @app.call(env)
+    assert !headers.has_key?('Cache-Control')
+  end
+
+  it 'sets cache control headers on static files if set' do
+    @app.set :static_cache_control, :public
+    env = Rack::MockRequest.env_for("/#{File.basename(__FILE__)}")
+    status, headers, body = @app.call(env)
+    assert headers.has_key?('Cache-Control')
+    assert_equal headers['Cache-Control'], 'public'
+
+    @app.set :static_cache_control, [:public, :must_revalidate, {:max_age => 300}]
+    env = Rack::MockRequest.env_for("/#{File.basename(__FILE__)}")
+    status, headers, body = @app.call(env)
+    assert headers.has_key?('Cache-Control')
+    assert_equal headers['Cache-Control'], 'public, must-revalidate, max-age=300'
+  end
+
 end

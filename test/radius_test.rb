@@ -1,7 +1,6 @@
-require File.dirname(__FILE__) + '/helper'
+require File.expand_path('../helper', __FILE__)
 
 begin
-fail LoadError, 'Radius broken on 1.9.' if RUBY_VERSION >= '1.9.1'
 require 'radius'
 
 class RadiusTest < Test::Unit::TestCase

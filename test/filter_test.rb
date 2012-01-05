@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/helper'
+require File.expand_path('../helper', __FILE__)
 
 class BeforeFilterTest < Test::Unit::TestCase
   it "executes filters in the order defined" do
@@ -97,6 +97,17 @@ class BeforeFilterTest < Test::Unit::TestCase
     assert_equal 'cool', body
   end
 
+  it "properly unescapes parameters" do
+    mock_app {
+      before { @foo = params['foo'] }
+      get('/foo') { @foo }
+    }
+
+    get '/foo?foo=bar%3Abaz%2Fbend'
+    assert ok?
+    assert_equal 'bar:baz/bend', body
+  end
+
   it "runs filters defined in superclasses" do
     base = Class.new(Sinatra::Base)
     base.before { @foo = 'hello from superclass' }
@@ -114,7 +125,7 @@ class BeforeFilterTest < Test::Unit::TestCase
     mock_app {
       before { ran_filter = true }
       set :static, true
-      set :public, File.dirname(__FILE__)
+      set :public_folder, File.dirname(__FILE__)
     }
     get "/#{File.basename(__FILE__)}"
     assert ok?
@@ -221,9 +232,12 @@ class AfterFilterTest < Test::Unit::TestCase
     count = 2
     base = Class.new(Sinatra::Base)
     base.after { count *= 2 }
-    mock_app(base) {
-      get('/foo') { count += 2 }
-    }
+    mock_app(base) do
+      get('/foo') do
+        count += 2
+        "ok"
+      end
+    end
 
     get '/foo'
     assert_equal 8, count
@@ -234,7 +248,7 @@ class AfterFilterTest < Test::Unit::TestCase
     mock_app {
       after { ran_filter = true }
       set :static, true
-      set :public, File.dirname(__FILE__)
+      set :public_folder, File.dirname(__FILE__)
     }
     get "/#{File.basename(__FILE__)}"
     assert ok?
@@ -364,6 +378,26 @@ class AfterFilterTest < Test::Unit::TestCase
     assert !ran
     get '/foo', {}, { 'HTTP_USER_AGENT' => 'foo' }
     assert ran
+  end
+
+  it 'can add params' do
+    mock_app do
+      before { params['foo'] = 'bar' }
+      get('/') { params['foo'] }
+    end
+
+    get '/'
+    assert_body 'bar'
+  end
+
+  it 'can remove params' do
+    mock_app do
+      before { params.delete('foo') }
+      get('/') { params['foo'].to_s }
+    end
+
+    get '/?foo=bar'
+    assert_body ''
   end
 
   it 'is possible to apply user_agent conditions to after filters with no path' do

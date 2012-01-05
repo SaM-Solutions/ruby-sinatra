@@ -1,5 +1,5 @@
 # I like coding: UTF-8
-require File.dirname(__FILE__) + '/helper'
+require File.expand_path('../helper', __FILE__)
 
 # Helper method for easy route pattern matching testing
 def route_def(pattern)
@@ -23,7 +23,7 @@ class RegexpLookAlike
 end
 
 class RoutingTest < Test::Unit::TestCase
-  %w[get put post delete options].each do |verb|
+  %w[get put post delete options patch].each do |verb|
     it "defines #{verb.upcase} request handlers with #{verb}" do
       mock_app {
         send verb, '/hello' do
@@ -78,6 +78,13 @@ class RoutingTest < Test::Unit::TestCase
     assert_equal 200, status
   end
 
+  it "it handles encoded slashes correctly" do
+    mock_app { get("/:a") { |a| a } }
+    get '/foo%2Fbar'
+    assert_equal 200, status
+    assert_body "foo/bar"
+  end
+
   it "overrides the content-type in error handlers" do
     mock_app {
       before { content_type 'text/plain' }
@@ -107,6 +114,8 @@ class RoutingTest < Test::Unit::TestCase
 
   it 'matches empty PATH_INFO to "" if a route is defined for ""' do
     mock_app do
+      disable :protection
+
       get '/' do
         'did not work'
       end
@@ -1047,7 +1056,7 @@ class RoutingTest < Test::Unit::TestCase
     mock_app do
       get '/foo' do
         status, headers, body = call env.merge("PATH_INFO" => '/bar')
-        [status, headers, body.map(&:upcase)]
+        [status, headers, body.each.map(&:upcase)]
       end
 
       get '/bar' do
@@ -1072,5 +1081,18 @@ class RoutingTest < Test::Unit::TestCase
     get '/test/foo'
     assert ok?
     assert_body 'hello'
+  end
+
+  it 'returns the route signature' do
+    signature = list = nil
+
+    mock_app do
+      signature = post('/') { }
+      list = routes['POST']
+    end
+
+    assert_equal Array, signature.class
+    assert_equal 4, signature.length
+    assert list.include?(signature)
   end
 end

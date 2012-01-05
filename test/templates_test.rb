@@ -1,5 +1,5 @@
 # encoding: UTF-8
-require File.dirname(__FILE__) + '/helper'
+require File.expand_path('../helper', __FILE__)
 File.delete(File.dirname(__FILE__) + '/views/layout.test') rescue nil
 
 class TestTemplate < Tilt::Template
@@ -144,7 +144,7 @@ class TemplatesTest < Test::Unit::TestCase
   end
 
   it 'loads templates from specified views directory' do
-    render_app { render :test, :hello, :views => options.views + '/foo' }
+    render_app { render :test, :hello, :views => settings.views + '/foo' }
 
     assert_equal "from another views directory\n", body
   end

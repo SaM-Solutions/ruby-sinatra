@@ -67,6 +67,12 @@ Sinatraでは、ルートはHTTPメソッドとURLマッチングパターンが
     params[:splat] # => ["path/to/file", "xml"]
   end
 
+ブロックパラーメータを使用した場合:
+
+  get '/download/*.*' do |path, ext|
+    [path, ext] # => ["path/to/file", "xml"]
+  end
+
 正規表現を使ったルート:
 
   get %r{/hello/([\w]+)} do
@@ -147,9 +153,9 @@ Rackレスポンス、Rackボディオブジェクト、HTTPステータスコ�
 == 静的ファイル
 
 静的ファイルは<tt>./public</tt>ディレクトリから配信されます。
-<tt>:public</tt>オプションを指定することで別の場所を指定することができます。
+<tt>:public_folder</tt>オプションを指定することで別の場所を指定することができます。
 
-  set :public, File.dirname(__FILE__) + '/static'
+  set :public_folder, File.dirname(__FILE__) + '/static'
 
 注意: この静的ファイル用のディレクトリ名はURL中に含まれません。
 例えば、<tt>./public/css/style.css</tt>は<tt>http://example.com/css/style.css</tt>でアクセスできます。
@@ -370,6 +376,7 @@ textileからメソッドを呼び出すことも、localsに変数を渡すこ�
 RDocテンプレートを使うにはRDocライブラリが必要です:
 
   # rdoc/markup/to_htmlを読み込みます
+  require "rdoc"
   require "rdoc/markup/to_html"
 
   get '/' do
@@ -431,6 +438,19 @@ Slimテンプレートを使うにはslimライブラリが必要です:
   end
 
 <tt>./views/index.slim</tt>を表示します。
+
+=== Creole テンプレート
+
+Creoleテンプレートを使うにはcreoleライブラリが必要です:
+
+  # creoleを読み込みます
+  require 'creole'
+
+  get '/' do
+    creole :index
+  end
+
+<tt>./views/index.creole</tt>を表示します。
 
 === CoffeeScript テンプレート
 
@@ -990,7 +1010,7 @@ Sinatraの開発版を使いたい場合は、ローカルに開発版を落と�
   git clone git://github.com/sinatra/sinatra.git
   ruby -Isinatra/lib myapp.rb
 
-<tt>sinatra/lib</tt>ディレクトリをto the<tt>LOAD_PATH</tt>に追加する方法もあります。
+<tt>sinatra/lib</tt>ディレクトリをアプリケーションの<tt>LOAD_PATH</tt>に追加する方法もあります。
 
   $LOAD_PATH.unshift File.dirname(__FILE__) + '/sinatra/lib'
   require 'rubygems'

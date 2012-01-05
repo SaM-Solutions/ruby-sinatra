@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/helper'
+require File.expand_path('../helper', __FILE__)
 
 begin
 require 'coffee-script'
@@ -71,7 +71,7 @@ class CoffeeTest < Test::Unit::TestCase
   it "passes coffee options to the coffee engine" do
     coffee_app { coffee "alert 'Aye!'\n", :no_wrap => true }
     assert ok?
-    assert_equal "alert('Aye!');", body
+    assert_body "alert('Aye!');"
   end
 
   it "passes default coffee options to the coffee engine" do
@@ -83,7 +83,7 @@ class CoffeeTest < Test::Unit::TestCase
     end
     get '/'
     assert ok?
-    assert_equal "alert('Aye!');", body
+    assert_body "alert('Aye!');"
   end
 end
 

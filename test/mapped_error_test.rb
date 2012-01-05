@@ -1,9 +1,13 @@
-require File.dirname(__FILE__) + '/helper'
+require File.expand_path('../helper', __FILE__)
 
 class FooError < RuntimeError
 end
 
 class FooNotFound < Sinatra::NotFound
+end
+
+class FooSpecialError < RuntimeError
+  def code; 501 end
 end
 
 class MappedErrorTest < Test::Unit::TestCase
@@ -25,6 +29,15 @@ class MappedErrorTest < Test::Unit::TestCase
       assert_equal 'Foo!', body
     end
 
+    it 'passes the exception object to the error handler' do
+      mock_app do
+        set :raise_errors, false
+        error(FooError) { |e| assert_equal(FooError, e.class) }
+        get('/') { raise FooError }
+      end
+      get('/')
+    end
+
     it 'uses the Exception handler if no matching handler found' do
       mock_app {
         set :raise_errors, false
@@ -37,6 +50,36 @@ class MappedErrorTest < Test::Unit::TestCase
       get '/'
       assert_equal 500, status
       assert_equal 'Exception!', body
+    end
+
+    it 'walks down inheritance chain for errors' do
+      mock_app {
+        set :raise_errors, false
+        error(RuntimeError) { 'Exception!' }
+        get '/' do
+          raise FooError
+        end
+      }
+
+      get '/'
+      assert_equal 500, status
+      assert_equal 'Exception!', body
+    end
+
+    it 'favors subclass handler over superclass handler if available' do
+      mock_app {
+        set :raise_errors, false
+        error(Exception) { 'Exception!' }
+        error(FooError) { 'FooError!' }
+        error(RuntimeError) { 'Exception!' }
+        get '/' do
+          raise FooError
+        end
+      }
+
+      get '/'
+      assert_equal 500, status
+      assert_equal 'FooError!', body
     end
 
     it "sets env['sinatra.error'] to the rescued exception" do
@@ -78,12 +121,7 @@ class MappedErrorTest < Test::Unit::TestCase
     end
 
     it "never raises Sinatra::NotFound beyond the application" do
-      mock_app {
-        set :raise_errors, true
-        get '/' do
-          raise Sinatra::NotFound
-        end
-      }
+      mock_app(Sinatra::Application) { get('/') { raise Sinatra::NotFound }}
       assert_nothing_raised { get '/' }
       assert_equal 404, status
     end
@@ -143,6 +181,17 @@ class MappedErrorTest < Test::Unit::TestCase
       get '/'
       assert_equal 'subclass', body
     end
+
+    it 'honors Exception#code if present' do
+      mock_app do
+        set :raise_errors, false
+        error(501) { 'Foo!' }
+        get('/') { raise FooSpecialError }
+      end
+      get '/'
+      assert_equal 501, status
+      assert_equal 'Foo!', body
+    end
   end
 
   describe 'Custom Error Pages' do
@@ -163,6 +212,19 @@ class MappedErrorTest < Test::Unit::TestCase
       mock_app {
         set :raise_errors, false
         error(500..550) { "Error: #{response.status}" }
+        get '/' do
+          [507, {}, 'A very special error']
+        end
+      }
+      get '/'
+      assert_equal 507, status
+      assert_equal 'Error: 507', body
+    end
+
+    it 'allows passing more than one range' do
+      mock_app {
+        set :raise_errors, false
+        error(409..411, 503..509) { "Error: #{response.status}" }
         get '/' do
           [507, {}, 'A very special error']
         end
