@@ -30,6 +30,7 @@ Description: Ruby web-development dressed in a DSL
 
 Package: libsinatra-ruby1.8
 Section: oldlibs
+Priority: extra
 Architecture: all
 Depends: ${misc:Depends}, ruby-sinatra
 Description: Transitional package for ruby-sinatra
@@ -38,6 +39,7 @@ Description: Transitional package for ruby-sinatra
 
 Package: libsinatra-ruby1.9.1
 Section: oldlibs
+Priority: extra
 Architecture: all
 Depends: ${misc:Depends}, ruby-sinatra
 Description: Transitional package for ruby-sinatra
@@ -46,6 +48,7 @@ Description: Transitional package for ruby-sinatra
 
 Package: libsinatra-ruby
 Section: oldlibs
+Priority: extra
 Architecture: all
 Depends: ${misc:Depends}, ruby-sinatra
 Description: Transitional package for ruby-sinatra
@@ -54,6 +57,7 @@ Description: Transitional package for ruby-sinatra
 
 Package: libsinatra-ruby-doc
 Section: oldlibs
+Priority: extra
 Architecture: all
 Depends: ${misc:Depends}, ruby-sinatra
 Description: Transitional package for ruby-sinatra
