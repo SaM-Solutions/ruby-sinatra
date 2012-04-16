@@ -13,3 +13,7 @@ export DH_RUBY_IGNORE_TESTS=all
 
 %:
 	dh $@ --buildsystem=ruby --with ruby
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -fr $(CURDIR)/.sass-cache
