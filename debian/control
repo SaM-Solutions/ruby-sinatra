@@ -4,7 +4,11 @@ Priority: optional
 Maintainer: Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>
 Uploaders: Lucas Nussbaum <lucas@lucas-nussbaum.net>, Youhei SASAKI <uwabami@gfd-dennou.org>
 DM-Upload-Allowed: yes
-Build-Depends: debhelper (>= 7.0.50~), gem2deb (>= 0.2.1), rake, ruby-tilt, ruby-rack-test, ruby-rack-protection
+Build-Depends: debhelper (>= 7.0.50~), gem2deb (>= 0.3.0~), rake, 
+ ruby-tilt, ruby-rack-test, ruby-rack-protection
+# ruby-haml, ruby-redcarpet, ruby-rdiscount, ruby-bluecloth, ruby-kramdown
+# ruby-maruku, ruby-sass, ruby-redcloth, ruby-nokogiri, ruby-erubis, ruby-builder, ruby-liquid
+# ruby-less, ruby-radius, ruby-slim, ruby-markaby, ruby-coffee-script, ruby-creole
 Standards-Version: 3.9.3
 Vcs-Git: git://git.debian.org/pkg-ruby-extras/ruby-sinatra.git
 Vcs-Browser: http://git.debian.org/?p=pkg-ruby-extras/ruby-sinatra.git;a=summary
