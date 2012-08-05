@@ -18,7 +18,7 @@ XS-Ruby-Versions: all
 Package: ruby-sinatra
 Architecture: all
 XB-Ruby-Versions: ${ruby:Versions}
-Depends: ${shlibs:Depends}, ${misc:Depends}, ruby1.8 | ruby-interpreter, ruby-rack, ruby-tilt
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby1.8 | ruby-interpreter, ruby-rack, ruby-tilt, ruby-rack-protection
 Replaces: libsinatra-ruby1.8 (<< 1.2.3-1~), libsinatra-ruby1.9.1 (<< 1.2.3-1~), libsinatra-ruby (<< 1.2.3-1~), libsinatra-ruby-doc (<< 1.2.3-1~)
 Conflicts: libsinatra-ruby1.8 (<< 1.2.3-1~), libsinatra-ruby1.9.1 (<< 1.2.3-1~), libsinatra-ruby (<< 1.2.3-1~), libsinatra-ruby-doc (<< 1.2.3-1~)
 Provides: libsinatra-ruby1.8, libsinatra-ruby1.9.1, libsinatra-ruby, libsinatra-ruby-doc
