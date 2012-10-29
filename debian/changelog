@@ -1,3 +1,10 @@
+ruby-sinatra (1.3.2-2.1) experimental; urgency=low
+
+  * Non-maintainer upload.
+  * Add fix-sinatra-error-handling.patch (Closes: #684021)
+
+ -- Vlad Shakhov <v.shakhov@sam-solutions.net>  Mon, 29 Oct 2012 12:17:26 +0300
+
 ruby-sinatra (1.3.2-2) unstable; urgency=low
 
   * Team upload

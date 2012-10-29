@@ -1,0 +1,12 @@
+diff -Naur sinatra-1.3.2-orig/lib/sinatra/base.rb sinatra-1.3.2/lib/sinatra/base.rb
+--- sinatra-1.3.2-orig/lib/sinatra/base.rb	2012-08-06 13:15:29.599949551 +0300
++++ sinatra-1.3.2/lib/sinatra/base.rb	2012-08-06 13:02:45.000000000 +0300
+@@ -927,6 +927,8 @@
+     def dump_errors!(boom)
+       msg = ["#{boom.class} - #{boom.message}:", *boom.backtrace].join("\n\t")
+       @env['rack.errors'].puts(msg)
++    rescue ::Exception => boom
++      # Just ignore it
+     end
+ 
+     class << self
